@@ -1,0 +1,123 @@
+<body>
+    <form onsubmit="calculate(this);" id="mainform">
+            <select onchange="minmax(this)">
+                <option value="-1">Choose</option>
+                <option value="0">Maximize</option>
+                <option value="1">Minimize</option>
+            </select>
+    </form>
+    <script>
+        step = 0
+        // globals
+        maineq = {
+            x:0,
+            y:0,
+        } // There is no need for the 0th degree coefficient, since it will always cancel itself
+        
+        t = -1
+        
+        eqs = []
+
+        function up() {
+            step+=1
+        }
+        // handlers
+        function calculate(zz) {
+            if (zz == 398) {
+                step = 2
+            }
+            form = document.getElementById("mainform")
+            if (step == 0) {
+                mainfx = form.mainfx.value
+                mainfy = form.mainfy.value
+                
+                maineq.x = parseFloat(mainfx)
+                maineq.y = parseFloat(mainfy)
+
+                step+=1
+                
+                form.innerHTML = `
+                <p><input type="text" style="width: 35px" name="eqx">x + <input type="text" style="width: 35px" name="eqy">y + <input type="text" style="width: 35px" name="eqd"> ≤ 0 <input style="background-color: #4CAF50" type="button" value="Done" onclick="calculate(398)"><input style="background-color: #FF0000" type="button" value="Next" onclick="calculate(this)"></p>
+                `
+                return null
+            } else if (step == 1) {
+                eqs.push({
+                    x: parseFloat(form.eqx.value),
+                    y: parseFloat(form.eqy.value),
+                    d: parseFloat(form.eqd.value)
+                })
+                form.innerHTML = `
+                <p><input type="text" style="width: 35px" name="eqx">x + <input type="text" style="width: 35px" name="eqy">y + <input type="text" style="width: 35px" name="eqd"> ≤ 0 <input style="background-color: #4CAF50" type="button" value="Done" onclick="calculate(398)"><input style="background-color: #FF0000" type="button" value="Next" onclick="calculate(this)"></p>
+                `
+                console.log(eqs)
+                console.log(step)
+            } else if (step > 1) {
+                if (eqs.length < 2) {
+                    console.log("You need at least two equations")
+                }
+                tocalc = []
+                for (let i = 0; i<eqs.length; i++) {
+                    j = i+1
+                    while (j<eqs.length) {
+                        tocalc.push([eqs[i], eqs[j]])
+                        j+=1
+                    }
+                }
+                points = []
+                for (let n = 0; n<tocalc.length; n++) {
+                    point = findCommonPoint(tocalc[n][0], tocalc[n][1])
+                    if (point != null) {
+                        kq = 0
+                        for (let m = 0; m<eqs.length; m++) {
+                            if (!pointRespects(point, eqs[m])) {
+                                kq += 1
+                            }
+                        }
+                        if (kq == 0) {
+                            points.push([maineq.x*point[0]+maineq.y*point[1], point])
+                        }
+                    }
+                } 
+                if (t == 0) {
+                    v = points.sort(function(a,b){return b[0]-a[0]})[0]
+                    alert(`${v[0]} | ${v[1]}`)
+                } else if (t == 1) {
+                    v = points.sort(function(a,b){return a[0]-b[0]})[0]
+                    alert(`${v[0]} | ${v[1]}`)
+                }
+                
+            }
+        }
+
+        function pointRespects(p, e) {
+            return (p[0]*e.x + p[1]*e.y + e.d <= 0)
+        }
+        
+        function findCommonPoint(a, b) {
+            if ((a.y != 0) && (b.y != 0)) {
+                x = (b.d/b.y - a.d/a.y) / (a.x/a.y - b.x/b.y)
+            } else if ((a.y == 0) && (b.y != 0)) {
+                x = -(a.d/a.x)
+            } else if ((a.y != 0) && (b.y != 0)) {
+                x = -(b.d/b.x)
+            } else {
+                x = null
+            }
+            if (x != null) {
+                y = -(a.x*x)/a.y - a.d/a.y
+            }
+            console.log([x, y])
+            return ([Math.round(x), Math.round(y)])
+        }
+
+        function minmax(obj) {
+            if (obj.value >= 0) {
+                frm = obj.parentElement
+                t = obj.value
+                frm.innerHTML = `
+                <p>${t == 1 ? "Minimize" : "Maximize"} f(x, y) = <input type="text" style="width: 35px" name="mainfx">x + <input type="text" style="width: 35px" name="mainfy">y <input style="background-color: #4CAF50" type="button" value="Done" onclick="calculate(this)"></p>
+                `
+            }
+        }
+    </script>
+</body>
